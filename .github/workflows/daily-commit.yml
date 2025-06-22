@@ -2,10 +2,10 @@ name: Daily Randomized Commits
 
 on:
   schedule:
-    - cron: "0 7 * * *" # Runs every day at 7 AM UTC
-    - cron: "0 12 * * *" # Additional run at 12 PM UTC
-    - cron: "0 17 * * *" # Additional run at 5 PM UTC
-  workflow_dispatch: # Optional: allows manual runs for testing
+    - cron: "0 7 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 17 * * *"
+  workflow_dispatch:
 
 jobs:
   daily-update:
@@ -22,13 +22,11 @@ jobs:
 
       - name: Randomized Multi-Commits
         run: |
-          # Randomly decide whether to skip this run (50% chance)
           if [ $(( RANDOM % 2 )) -eq 0 ]; then
             echo "Skipping this run to simulate random behavior."
             exit 0
           fi
 
-          # Random number of commits between 1 and 4
           num_commits=$(( RANDOM % 4 + 1 ))
           echo "Making $num_commits commits in this run."
 
@@ -37,7 +35,16 @@ jobs:
             echo "Random commit $i on $(date)" >> daily-log.md
             git add daily-log.md
             git commit -m "Random commit $i on $(date)"
-            sleep $(( RANDOM % 30 + 5 ))  # Sleep between 5 and 35 seconds
+            sleep $(( RANDOM % 30 + 5 ))
           done
 
+      - name: Push changes if there are commits
+        run: |
+          if git diff --cached --quiet; then
+            echo "No changes to push."
+            exit 0
+          fi
+
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
